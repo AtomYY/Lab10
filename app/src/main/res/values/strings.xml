@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Lab7</string>
+    <string-array name="books">
+        <item>The Comedy of Errors</item>
+        <item>Romeo and Juliet</item>
+        <item>A midsummer night's dream</item>
+        <item>Hamlet，Prince of Denmark</item>
+        <item>Othello，the Moore of Venice</item>
+        <item>King Lear</item>
+        <item>The tragedy of Macbeth</item>
+        <item>The merchant of Venice</item>
+        <item>The tempest</item>
+        <item>Cymbeline，King of Britain</item>
+    </string-array>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
