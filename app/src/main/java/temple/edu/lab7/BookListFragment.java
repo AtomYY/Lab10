@@ -10,17 +10,38 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 
+import java.util.ArrayList;
 
 
 public class BookListFragment extends Fragment {
 
     ListView listView;
-
+    ArrayList<String> bookList;
+    GetBookInterface gbi;
     Context parent;
+
+    public static final String BOOK_KEY = "book_list";
 
     public BookListFragment() {
         // Required empty public constructor
+    }
+
+    public static BookListFragment newInstance(ArrayList<java.lang.String> bookList) {
+        BookListFragment blf = new BookListFragment();
+        Bundle bundle = new Bundle();
+        bundle.putStringArrayList(BOOK_KEY, bookList);
+
+        return blf;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            bookList = getArguments().getParcelable(BOOK_KEY);
+        }
     }
 
 
@@ -30,9 +51,7 @@ public class BookListFragment extends Fragment {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_book_list, container, false);
         listView = v.findViewById(R.id.listView);
-
-        listView.setAdapter(new ArrayAdapter<>(parent, android.R.layout.simple_list_item_1,
-                parent.getResources().getStringArray(R.array.books)));
+        listView.setAdapter(new ArrayAdapter<String>(parent, R.layout.support_simple_spinner_dropdown_item, bookList));
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -50,19 +69,10 @@ public class BookListFragment extends Fragment {
     public void onAttach(Context context) {
         super.onAttach(context);
         this.parent = context;
+        gbi = (GetBookInterface)context;
     }
 
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
     public interface GetBookInterface {
         void bookSelected(String bookName);
     }

@@ -1,6 +1,10 @@
 package temple.edu.lab7;
 
+import android.app.Activity;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -10,19 +14,21 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link BookDetailsFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link BookDetailsFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import static android.provider.ContactsContract.CommonDataKinds.Website.URL;
+
+
 public class BookDetailsFragment extends Fragment {
 
-    TextView text;
-    String bookName = "";
+    Book book;
+
+    TextView tile;
+    TextView author;
+    TextView published;
+    ImageView cover;
 
     public static final String BOOK_KEY = "book_name";
 
@@ -30,10 +36,12 @@ public class BookDetailsFragment extends Fragment {
         // Required empty public constructor
     }
 
-    public static BookDetailsFragment newInstance(String bookName) {
+    public static BookDetailsFragment newInstance(Book book) {
+
+
         BookDetailsFragment bdf = new BookDetailsFragment();
         Bundle bundle = new Bundle();
-        bundle.putString(BOOK_KEY, bookName);
+        bundle.putParcelable(BOOK_KEY, book);
 
         bdf.setArguments(bundle);
         return bdf;
@@ -43,7 +51,7 @@ public class BookDetailsFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            bookName = getArguments().getString(BOOK_KEY);
+            book = getArguments().getParcelable(BOOK_KEY);
         }
     }
 
@@ -52,18 +60,21 @@ public class BookDetailsFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_book_details, container, false);
-        text = v.findViewById(R.id.textView);
-
-        change(bookName);
+        tile = v.findViewById(R.id.title);
+        author = v.findViewById(R.id.author);
+        published = v.findViewById(R.id.published);
+        cover = v.findViewById(R.id.cover);
 
         return v;
     }
 
-    public void changeBook(String bookName) {
-        change(bookName);
-    }
+    public void changeBook(Book book) throws IOException {
+        tile.setText(book.getTitle());
+        author.setText(book.getAuthor());
+        published.setText(book.getPublished());
 
-    private void change (String bookName) {
-
+        URL imgURL = new URL(book.getCoverURL());
+        Bitmap image = BitmapFactory.decodeStream(imgURL.openConnection().getInputStream());
+        cover.setImageBitmap(image);
     }
 }
