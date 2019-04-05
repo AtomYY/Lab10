@@ -31,6 +31,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.List;
 
 import static temple.edu.lab7.Book.getBook;
 
@@ -42,6 +43,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     Book currentBook;
     ArrayList<String> bookNameArray;
     ArrayList<Book> bookObjList;
+    List<Fragment> bdfl = new ArrayList<>();
 
     BookDetailsFragment bdf;
     FragmentManager fm;
@@ -116,14 +118,16 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                             bookObjList.add(getBook(bookList.getJSONObject(i)));
                         }
 
+                        bdfl = new ArrayList<Fragment>(bookObjList.size());
+                        for (int i = 0; i < bookObjList.size(); i++) {
+                            bdfl.add(BookDetailsFragment.newInstance(bookObjList.get(i)));
+                        }
+
                         if(singlePane) {
                             ViewPager vp = findViewById(R.id.viewPager);
-                            //for (int i = 0; i < bookArray.length; i++) {
-                            //BookDetailsFragment.newInstance(books[i]);
-                            //}
-                            //BookListFragment blf = new BookListFragment();
-                            //fm.beginTransaction().replace(R.id.booklist, blf).commit();
 
+                            MyPageAdapter adapter = new MyPageAdapter(fm,bdfl);
+                            vp.setAdapter(adapter);
                         } else {
 
                             BookListFragment blf = BookListFragment.newInstance(bookNameArray);
@@ -150,6 +154,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             }
         };
         loadContent.start();
+
 
     }
 
