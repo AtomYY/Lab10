@@ -40,7 +40,8 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
     Book book;
     Book currentBook;
-    ArrayList bookArray;
+    ArrayList<String> bookNameArray;
+    ArrayList<Book> bookObjList;
 
     BookDetailsFragment bdf;
     FragmentManager fm;
@@ -107,10 +108,12 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
                         JSONArray bookList = new JSONArray(response);
                         JSONObject books = bookList.getJSONObject(1);
-                        bookArray = new ArrayList<String>(bookList.length());
+                        bookNameArray = new ArrayList<String>(bookList.length());
+                        bookObjList = new ArrayList<Book>(bookList.length());
 
                         for(int i = 0; i < bookList.length(); i++) {
-                            bookArray.add(bookList.getJSONObject(i).getString("title"));
+                            bookNameArray.add(bookList.getJSONObject(i).getString("title"));
+                            bookObjList.add(getBook(bookList.getJSONObject(i)));
                         }
 
                         if(singlePane) {
@@ -123,11 +126,10 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
                         } else {
 
-                            BookListFragment blf = new BookListFragment();
-                            blf = BookListFragment.newInstance(bookArray);
+                            BookListFragment blf = BookListFragment.newInstance(bookNameArray);
                             fm.beginTransaction().replace(R.id.fbl, blf).commit();
                             BookDetailsFragment bdf = new BookDetailsFragment();
-                            fm.beginTransaction().replace(R.id.fbd, bdf).commit();
+                            //fm.beginTransaction().replace(R.id.fbd, bdf).commit();
 
                         }
 
@@ -162,12 +164,12 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     }
 
     @Override
-    public void bookSelected(String bookName) {
+    public void bookSelected(int id) {
         if (singlePane) {
 
         } else{
             //bdf.changeBook(bookName);
-            BookDetailsFragment newFragment = BookDetailsFragment.newInstance(book);
+            BookDetailsFragment newFragment = BookDetailsFragment.newInstance(bookObjList.get(id));
             fm.beginTransaction()
                     .replace(R.id.fbd, newFragment)
                     .commit();

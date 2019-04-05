@@ -23,14 +23,6 @@ public class Book implements Parcelable {
         this.published = published;
         this.coverURL = coverURL;
     }
-    protected Book(Parcel in) {
-        bookId = in.readInt();
-        title = in.readString();
-        author = in.readString();
-        duration = in.readInt();
-        published = in.readInt();
-        coverURL = in.readString();
-    }
 
     public static Book getBook(JSONObject obj) throws JSONException {
         Log.d("Recieve oject", obj.getString("title"));
@@ -39,17 +31,20 @@ public class Book implements Parcelable {
         return book;
     }
 
-    public static final Creator<Book> CREATOR = new Creator<Book>() {
-        @Override
-        public Book createFromParcel(Parcel in) {
-            return new Book(in);
+    public JSONObject getBookAsJSON(){
+        JSONObject bookObject = new JSONObject();
+        try {
+            bookObject.put("book_id", bookId);
+            bookObject.put("title", title);
+            bookObject.put("author", author);
+            bookObject.put("duration", duration);
+            bookObject.put("published", published);
+            bookObject.put("cover_url", coverURL);
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
-
-        @Override
-        public Book[] newArray(int size) {
-            return new Book[size];
-        }
-    };
+        return bookObject;
+    }
 
     public int getId() {
         return this.bookId;
@@ -75,20 +70,23 @@ public class Book implements Parcelable {
         dest.writeString(coverURL);
     }
 
-    public JSONObject getBookAsJSON(){
-        JSONObject bookObject = new JSONObject();
-        try {
-            bookObject.put("book_id", bookId);
-            bookObject.put("title", title);
-            bookObject.put("author", author);
-            bookObject.put("duration", duration);
-            bookObject.put("published", published);
-            bookObject.put("cover_url", coverURL);
-        } catch (JSONException e) {
-            e.printStackTrace();
+    private Book(Parcel in) {
+        bookId = in.readInt();
+        title = in.readString();
+        author = in.readString();
+        duration = in.readInt();
+        published = in.readInt();
+        coverURL = in.readString();
+    }
+    public static final Creator<Book> CREATOR = new Parcelable.Creator<Book>() {
+        @Override
+        public Book createFromParcel(Parcel in) {
+            return new Book(in);
         }
 
-        return bookObject;
-    }
-
+        @Override
+        public Book[] newArray(int size) {
+            return new Book[size];
+        }
+    };
 }

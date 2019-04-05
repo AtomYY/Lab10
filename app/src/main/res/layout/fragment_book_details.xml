@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:background="#CCC"
     tools:context=".BookDetailsFragment">
 
@@ -10,22 +11,29 @@
         android:id="@+id/title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="hi"
         android:textSize="25sp" />
+
     <ImageView
         android:id="@+id/cover"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:contentDescription="Cover" />
+
     <TextView
         android:id="@+id/author"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="hi"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:textSize="25sp" />
+
     <TextView
         android:id="@+id/published"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="hi"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:textSize="25sp" />
-</FrameLayout>
+
+    <TextView
+        android:id="@+id/duration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="25sp" />
+</LinearLayout>

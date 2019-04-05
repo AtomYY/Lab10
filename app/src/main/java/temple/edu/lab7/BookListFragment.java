@@ -4,6 +4,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,7 +33,7 @@ public class BookListFragment extends Fragment {
         BookListFragment blf = new BookListFragment();
         Bundle bundle = new Bundle();
         bundle.putStringArrayList(BOOK_KEY, bookList);
-
+        blf.setArguments(bundle);
         return blf;
     }
 
@@ -40,7 +41,7 @@ public class BookListFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            bookList = getArguments().getParcelable(BOOK_KEY);
+            bookList = getArguments().getStringArrayList(BOOK_KEY);
         }
     }
 
@@ -51,13 +52,13 @@ public class BookListFragment extends Fragment {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_book_list, container, false);
         listView = v.findViewById(R.id.listView);
+        Log.d("BookList", bookList.toString());
         listView.setAdapter(new ArrayAdapter<String>(parent, R.layout.support_simple_spinner_dropdown_item, bookList));
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parentView, View view, int position, long id) {
-                String bookName = (String) parentView.getItemAtPosition(position);
-                ((GetBookInterface) parent).bookSelected(bookName);
+                ((GetBookInterface) parent).bookSelected(position);
             }
         });
 
@@ -74,6 +75,6 @@ public class BookListFragment extends Fragment {
 
 
     public interface GetBookInterface {
-        void bookSelected(String bookName);
+        void bookSelected(int id);
     }
 }
