@@ -5,24 +5,42 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="horizontal">
+    android:orientation="vertical">
 
+    <EditText
+        android:id="@+id/search"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
-    <FrameLayout
-        android:id="@+id/fbl"
-        android:layout_width="250dp"
+    <android.support.v7.widget.AppCompatButton
+        android:id="@+id/confirmSearch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/confirmSearch"
+        android:textSize="25dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="0.3">
+        android:orientation="horizontal">
 
-    </FrameLayout>
+        <FrameLayout
+            android:id="@+id/fbl"
+            android:layout_width="300dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.3">
 
-    <FrameLayout
-        android:id="@+id/fbd"
-        android:layout_width="250dp"
-        android:layout_height="match_parent"
-        android:layout_weight="0.7">
+        </FrameLayout>
 
-    </FrameLayout>
+        <FrameLayout
+            android:id="@+id/fbd"
+            android:layout_width="300dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.7">
+
+        </FrameLayout>
+
+    </LinearLayout>
 
 
 </LinearLayout>

@@ -18,6 +18,9 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,9 +40,12 @@ import static temple.edu.lab7.Book.getBook;
 
 public class MainActivity extends AppCompatActivity implements BookListFragment.GetBookInterface {
 
+    public static final String DEFAULT_URL = "https://kamorris.com/lab/audlib/booksearch.php";
     String errorMsg;
+    String search;
+    String searchURL;
+    URL url;
 
-    Book book;
     Book currentBook;
     ArrayList<String> bookNameArray;
     ArrayList<Book> bookObjList;
@@ -50,6 +56,9 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
     boolean singlePane;
 
+    EditText edit;
+    Button button;
+
     Handler showContent = new Handler(new Handler.Callback() {
 
         @Override
@@ -58,11 +67,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             JSONObject responseObject = (JSONObject) msg.obj;
 
             try {
-                Log.d("Current response: ", responseObject.toString());
                 currentBook = getBook(responseObject);
-                Log.d("Current Title", responseObject.getString("title"));
-                Log.d("Current Title", currentBook.getTitle());
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -78,8 +83,11 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        edit = findViewById(R.id.search);
+        button = findViewById(R.id.confirmSearch);
         singlePane = findViewById(R.id.viewPager) != null;
         fm = getSupportFragmentManager();
+
 
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
@@ -91,71 +99,88 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             public void run() {
 
                 if (isNetworkActive()) {
-
-                    URL url;
-
-                    try {
-                        url = new URL("https://kamorris.com/lab/audlib/booksearch.php");
-                        BufferedReader reader = new BufferedReader(
-                                new InputStreamReader(
-                                        url.openStream()));
-
-                        String response = "", tmpResponse;
-
-                        tmpResponse = reader.readLine();
-                        while (tmpResponse != null) {
-                            response = response + tmpResponse;
-                            tmpResponse = reader.readLine();
-                        }
-
-                        JSONArray bookList = new JSONArray(response);
-                        JSONObject books = bookList.getJSONObject(1);
-                        bookNameArray = new ArrayList<String>(bookList.length());
-                        bookObjList = new ArrayList<Book>(bookList.length());
-
-                        for(int i = 0; i < bookList.length(); i++) {
-                            bookNameArray.add(bookList.getJSONObject(i).getString("title"));
-                            bookObjList.add(getBook(bookList.getJSONObject(i)));
-                        }
-
-                        bdfl = new ArrayList<Fragment>(bookObjList.size());
-                        for (int i = 0; i < bookObjList.size(); i++) {
-                            bdfl.add(BookDetailsFragment.newInstance(bookObjList.get(i)));
-                        }
-
-                        if(singlePane) {
-                            ViewPager vp = findViewById(R.id.viewPager);
-
-                            MyPageAdapter adapter = new MyPageAdapter(fm,bdfl);
-                            vp.setAdapter(adapter);
-                        } else {
-
-                            BookListFragment blf = BookListFragment.newInstance(bookNameArray);
-                            fm.beginTransaction().replace(R.id.fbl, blf).commit();
-                            BookDetailsFragment bdf = new BookDetailsFragment();
-                            //fm.beginTransaction().replace(R.id.fbd, bdf).commit();
-
-                        }
-
-                        Message msg = Message.obtain();
-
-                        msg.obj = books;
-
-                        showContent.sendMessage(msg);
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
+                    work(DEFAULT_URL);
                 } else {
                     Toast.makeText(MainActivity.this, "Please connect to a network", Toast.LENGTH_SHORT).show();
-
                 }
             }
         };
         loadContent.start();
 
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(edit.getText().toString() != null) {
+                    search = edit.getText().toString();
+                    searchURL = "https://kamorris.com/lab/audlib/booksearch.php?search=" + search;
+                    Log.d("search URL", searchURL);
+                } else {
+                    searchURL = DEFAULT_URL;
+                }
+                loadSearchContent.start();
+            }
+        });
+    }
 
+    Thread loadSearchContent = new Thread() {
+        @Override
+        public void run() {
+
+            if (isNetworkActive()) {
+                work(searchURL);
+            } else {
+                Toast.makeText(MainActivity.this, "Please connect to a network", Toast.LENGTH_SHORT).show();
+            }
+        }
+    };
+
+
+    public void work(String inputURL) {
+        try {
+            url = new URL(inputURL);
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(
+                            url.openStream()));
+
+            String response = "", tmpResponse;
+
+            tmpResponse = reader.readLine();
+            while (tmpResponse != null) {
+                response = response + tmpResponse;
+                tmpResponse = reader.readLine();
+            }
+
+            JSONArray bookList = new JSONArray(response);
+            bookNameArray = new ArrayList<String>(bookList.length());
+            bookObjList = new ArrayList<Book>(bookList.length());
+
+            for(int i = 0; i < bookList.length(); i++) {
+                bookNameArray.add(bookList.getJSONObject(i).getString("title"));
+                bookObjList.add(getBook(bookList.getJSONObject(i)));
+            }
+
+            bdfl = new ArrayList<Fragment>(bookObjList.size());
+            for (int i = 0; i < bookObjList.size(); i++) {
+                bdfl.add(BookDetailsFragment.newInstance(bookObjList.get(i)));
+            }
+
+            if(singlePane) {
+                ViewPager vp = findViewById(R.id.viewPager);
+
+                MyPageAdapter adapter = new MyPageAdapter(fm,bdfl);
+                vp.setAdapter(adapter);
+            } else {
+
+                BookListFragment blf = BookListFragment.newInstance(bookNameArray);
+                fm.beginTransaction().replace(R.id.fbl, blf).commit();
+                BookDetailsFragment bdf = new BookDetailsFragment();
+                //fm.beginTransaction().replace(R.id.fbd, bdf).commit();
+
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public boolean isNetworkActive() {
