@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.Image;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -14,9 +15,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -91,10 +95,39 @@ public class BookDetailsFragment extends Fragment {
         title.setText(book.getTitle());
         author.setText("Author" + book.getAuthor());
         published.setText("Published: " + String.valueOf(book.getPublished()));
-        duration.setText("Duration" + String.valueOf(book.getDuration()));
+        duration.setText("Duration: " + String.valueOf(book.getDuration()));
 
-        URL imgURL = new URL(book.getCoverURL());
-        //Bitmap image = BitmapFactory.decodeStream((InputStream) imgURL.openConnection().getContent());
-        //cover.setImageBitmap(image);
+        new DownloadImageFromInternet(cover)
+                .execute(book.getCoverURL());
+        /*URL imgURL = new URL(book.getCoverURL());
+        Bitmap image = BitmapFactory.decodeStream((InputStream) imgURL.openConnection().getContent());
+        cover.setImageBitmap(image);*/
     }
+
+    private class DownloadImageFromInternet extends AsyncTask<String, Void, Bitmap> {
+        ImageView imageView;
+
+        public DownloadImageFromInternet(ImageView imageView) {
+            this.imageView = imageView;
+        }
+
+        protected Bitmap doInBackground(String... urls) {
+            String imageURL = urls[0];
+            Bitmap bimage = null;
+            try {
+                InputStream in = new java.net.URL(imageURL).openStream();
+                bimage = BitmapFactory.decodeStream(in);
+
+            } catch (Exception e) {
+                Log.e("Error Message", e.getMessage());
+                e.printStackTrace();
+            }
+            return bimage;
+        }
+
+        protected void onPostExecute(Bitmap result) {
+            imageView.setImageBitmap(result);
+        }
+    }
+
 }
