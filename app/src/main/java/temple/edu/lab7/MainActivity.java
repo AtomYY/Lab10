@@ -1,19 +1,15 @@
 package temple.edu.lab7;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -21,20 +17,17 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
+
 
 import static temple.edu.lab7.Book.getBook;
 
@@ -45,6 +38,8 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     String search;
     String searchURL;
     URL url;
+
+    final Object object = new Object();
 
     Book currentBook;
     ArrayList<String> bookNameArray;
@@ -83,6 +78,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
         edit = findViewById(R.id.search);
         button = findViewById(R.id.confirmSearch);
         singlePane = findViewById(R.id.viewPager) != null;
@@ -93,18 +89,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
             requestPermissions(new String[]{Manifest.permission.INTERNET, Manifest.permission.ACCESS_NETWORK_STATE}, 1234);
 
-
-        Thread loadContent = new Thread() {
-            @Override
-            public void run() {
-
-                if (isNetworkActive()) {
-                    work(DEFAULT_URL);
-                } else {
-                    Toast.makeText(MainActivity.this, "Please connect to a network", Toast.LENGTH_SHORT).show();
-                }
-            }
-        };
+        searchURL = DEFAULT_URL;
         loadContent.start();
 
         button.setOnClickListener(new View.OnClickListener() {
@@ -117,19 +102,30 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                 } else {
                     searchURL = DEFAULT_URL;
                 }
-                loadSearchContent.start();
+                synchronized (object) {
+                    object.notify();
+                }
             }
         });
     }
 
-    Thread loadSearchContent = new Thread() {
+    Thread loadContent = new Thread() {
         @Override
         public void run() {
 
-            if (isNetworkActive()) {
-                work(searchURL);
-            } else {
-                Toast.makeText(MainActivity.this, "Please connect to a network", Toast.LENGTH_SHORT).show();
+            while(true) {
+                if (isNetworkActive()) {
+                    work(searchURL);
+                } else {
+                    Toast.makeText(MainActivity.this, "Please connect to a network", Toast.LENGTH_SHORT).show();
+                }
+                synchronized (object) {
+                    try {
+                        object.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
     };
