@@ -19,9 +19,53 @@
         android:text="@string/confirmSearch"
         android:textSize="20dp"/>
 
+    <LinearLayout
+        android:id="@+id/player"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        tools:context=".PlayerFragment">
+
+        <Button
+            android:id="@+id/play"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="play"/>
+
+        <Button
+            android:id="@+id/stop"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="stop"/>
+
+        <Button
+            android:id="@+id/pause"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="pause"/>
+
+        <SeekBar
+            android:id="@+id/seekBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+    </LinearLayout>
+
     <android.support.v4.view.ViewPager
         android:id="@+id/viewPager"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent" />
+        android:layout_height="fill_parent" >
+
+    </android.support.v4.view.ViewPager>
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/player_main"
+        android:layout_width="fill_parent"
+        android:layout_height="200dp" >
+    </android.support.v4.view.ViewPager>
+
+
 
 </LinearLayout>
