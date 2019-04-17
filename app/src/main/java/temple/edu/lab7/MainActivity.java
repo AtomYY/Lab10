@@ -56,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     BookDetailsFragment bdf;
     PlayerFragment playerFragment;
     FragmentManager fm;
+    ViewPager vp;
 
     boolean singlePane;
 
@@ -108,9 +109,16 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         stop = findViewById(R.id.stop);
         seekBar = findViewById(R.id.seekBar);
 
+        play.setText("play");
+        pause.setText("pause");
+        stop.setText("stop");
+
         View.OnClickListener onClickPlay = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(singlePane) {
+                    currentBookId = (vp.getCurrentItem() + 1);
+                }
                 binder.play(currentBookId);
             }
         };
@@ -136,7 +144,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                
+
             }
 
             @Override
@@ -230,7 +238,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             }
 
             if(singlePane) {
-                ViewPager vp = findViewById(R.id.viewPager);
+                vp = findViewById(R.id.viewPager);
 
                 MyPageAdapter adapter = new MyPageAdapter(fm,bdfl);
                 vp.setAdapter(adapter);

@@ -30,13 +30,14 @@ import static android.provider.ContactsContract.CommonDataKinds.Website.URL;
 public class BookDetailsFragment extends Fragment {
 
     Book book;
-    String bookTitle;
+    int bookId;
 
     TextView title;
     TextView author;
     TextView published;
     TextView duration;
     ImageView cover;
+
 
     public static final String BOOK_KEY = "book_name";
 
@@ -92,6 +93,7 @@ public class BookDetailsFragment extends Fragment {
     }
 
     public void changeBook(Book book) throws IOException {
+        bookId = book.getId();
         title.setText(book.getTitle());
         author.setText("Author" + book.getAuthor());
         published.setText("Published: " + String.valueOf(book.getPublished()));
@@ -128,6 +130,10 @@ public class BookDetailsFragment extends Fragment {
         protected void onPostExecute(Bitmap result) {
             imageView.setImageBitmap(result);
         }
+    }
+
+    public int returnId() {
+        return bookId;
     }
 
 }
