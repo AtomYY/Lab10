@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     SeekBar seekBar;
 
     int currentBookId;
+    int currentpos = 0;
 
     boolean connected;
     AudiobookService.MediaControlBinder binder;
@@ -134,6 +135,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             @Override
             public void onClick(View v) {
                 binder.stop();
+                seekBar.setProgress(0);
             }
         };
 
@@ -155,6 +157,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 seekBar.setProgress(seekBar.getProgress());
+                currentpos = seekBar.getProgress();
                 binder.seekTo(seekBar.getProgress());
             }
         });
