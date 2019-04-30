@@ -31,6 +31,7 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -53,6 +54,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
     final Object object = new Object();
     final Object object2 = new Object();
+    final Object object3 = new Object();
 
     Book currentBook;
     ArrayList<String> bookNameArray;
@@ -91,7 +93,6 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     String savedURL = "https://kamorris.com/lab/audlib/booksearch.php";
     File savedURLFIle;
 
-
     int playingBookId;
 
     @Override
@@ -101,7 +102,6 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
         file = new File(getFilesDir(), internalFilename);
         preferences = getPreferences(MODE_PRIVATE);
-
 
         edit = findViewById(R.id.search);
         button = findViewById(R.id.confirmSearch);
@@ -183,7 +183,6 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
             while ((Line = br.readLine()) != null) {
                 text.append(Line);
-                text.append("\n");
             }
             savedURL = text.toString();
             br.close();
@@ -191,9 +190,26 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             e.printStackTrace();
         }
 
-        searchURL = savedURL;
+        searchURL = DEFAULT_URL;
         loadContent.start();
         donwloadBook.start();
+
+        if(singlePane) {
+
+            synchronized (object3) {
+
+                try {
+                    object3.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                vp = findViewById(R.id.viewPager);
+
+                adapter = new MyPageAdapter(fm, bdfl);
+                vp.setAdapter(adapter);
+            }
+        }
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -201,12 +217,23 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                 if(edit.getText().toString() != null) {
                     search = edit.getText().toString();
                     searchURL = "https://kamorris.com/lab/audlib/booksearch.php?search=" + search;
+                    savedURLFIle.delete();
+                    savedURLFIle = new File(getFilesDir(), "lastURL");
+                    try {
+                        savedURLFIle.createNewFile();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    saveFile();
                     Log.d("search URL", searchURL);
                 } else {
                     searchURL = DEFAULT_URL;
                 }
                 synchronized (object) {
                     object.notify();
+                }
+                if(singlePane) {
+                    adapter.notifyDataSetChanged();
                 }
             }
         });
@@ -266,11 +293,12 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                 bdfl.add(BookDetailsFragment.newInstance(bookObjList.get(i)));
             }
 
-            if(singlePane) {
-                vp = findViewById(R.id.viewPager);
+            synchronized (object3) {
+                object3.notify();
+            }
 
-                adapter = new MyPageAdapter(fm,bdfl);
-                vp.setAdapter(adapter);
+            if(singlePane) {
+
             } else {
 
                 BookListFragment blf = BookListFragment.newInstance(bookNameArray);
@@ -374,6 +402,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         if(connected) {
             binder.stop();
         }
+        saveFile();
     }
 
     @Override
@@ -426,4 +455,15 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         downloaded = preferences.getBoolean(String.valueOf(id),false);
         downloaded = false;
     }
+
+    private void saveFile() {
+        try {
+            FileOutputStream outputStream = new FileOutputStream(savedURLFIle);
+            outputStream.write(searchURL.getBytes());
+            outputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 }
