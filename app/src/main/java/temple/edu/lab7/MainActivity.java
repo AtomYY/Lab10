@@ -322,7 +322,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     public void play(int id) {
         downloaded = preferences.getBoolean(String.valueOf(id),false);
         if(downloaded) {
-            String fileName = String.valueOf(id) + ".mp3";
+            String fileName = Environment.getExternalStorageDirectory() + "/BookDownload/" + String.valueOf(id) + ".mp3";
             File audioFIle = new File(fileName);
             binder.play(audioFIle);
         } else {
@@ -389,7 +389,11 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     }
 
     @Override
-    public void deleteBook() {
-
+    public void deleteBook(int id) {
+        String fileName = Environment.getExternalStorageDirectory() + "/BookDownload/" + String.valueOf(id) + ".mp3";
+        File deletedFile = new File(fileName);
+        deletedFile.delete();
+        downloaded = preferences.getBoolean(String.valueOf(id),false);
+        downloaded = false;
     }
 }

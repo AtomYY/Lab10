@@ -99,7 +99,7 @@ public class BookDetailsFragment extends Fragment {
         delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                bdi.deleteBook(book.getId());
             }
         });
 
@@ -156,7 +156,7 @@ public class BookDetailsFragment extends Fragment {
 
     public interface bookDetailInterface {
         void downloadBook(int id);
-        void deleteBook();
+        void deleteBook(int id);
     }
 
 }
