@@ -13,6 +13,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -38,15 +39,13 @@ public class BookDetailsFragment extends Fragment {
     TextView duration;
     ImageView cover;
 
+    Button download;
+    Button delete;
+
+    bookDetailInterface bdi;
+    Context parent;
 
     public static final String BOOK_KEY = "book_name";
-
-    /*public static final String BOOK_ID = "book_id";
-    public static final String BOOK_TITLE = "book_title";
-    public static final String BOOK_AUTHOR = "book_author";
-    public static final String BOOK_DURATION = "book_duration";
-    public static final String BOOK_PUBLISHED = "book_published";
-    public static final String BOOK_COVER = "book_cover";*/
 
     public BookDetailsFragment() {
         // Required empty public constructor
@@ -68,7 +67,6 @@ public class BookDetailsFragment extends Fragment {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             book = getArguments().getParcelable(BOOK_KEY);
-            //book = new Book(getArguments().getInt(BOOK_ID), getArguments().getString(BOOK_TITLE),getArguments().getString(BOOK_AUTHOR),getArguments().getInt(BOOK_DURATION),getArguments().getInt(BOOK_PUBLISHED),getArguments().getString(BOOK_COVER));
         }
     }
 
@@ -82,12 +80,28 @@ public class BookDetailsFragment extends Fragment {
         published = v.findViewById(R.id.published);
         duration = v.findViewById(R.id.duration);
         cover = v.findViewById(R.id.cover);
+        download = v.findViewById(R.id.download);
+        delete = v.findViewById(R.id.delete);
 
         try {
             changeBook(book);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        download.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                bdi.downloadBook(book.getId());
+            }
+        });
+
+        delete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
 
         return v;
     }
@@ -101,9 +115,6 @@ public class BookDetailsFragment extends Fragment {
 
         new DownloadImageFromInternet(cover)
                 .execute(book.getCoverURL());
-        /*URL imgURL = new URL(book.getCoverURL());
-        Bitmap image = BitmapFactory.decodeStream((InputStream) imgURL.openConnection().getContent());
-        cover.setImageBitmap(image);*/
     }
 
     private class DownloadImageFromInternet extends AsyncTask<String, Void, Bitmap> {
@@ -134,6 +145,18 @@ public class BookDetailsFragment extends Fragment {
 
     public int returnId() {
         return bookId;
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        this.parent = context;
+        bdi = (bookDetailInterface)parent;
+    }
+
+    public interface bookDetailInterface {
+        void downloadBook(int id);
+        void deleteBook();
     }
 
 }

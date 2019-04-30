@@ -5,9 +5,11 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -28,6 +30,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
@@ -38,7 +42,7 @@ import edu.temple.audiobookplayer.AudiobookService;
 
 import static temple.edu.lab7.Book.getBook;
 
-public class MainActivity extends AppCompatActivity implements BookListFragment.GetBookInterface, PlayerFragment.PlayerInterface{
+public class MainActivity extends AppCompatActivity implements BookListFragment.GetBookInterface, PlayerFragment.PlayerInterface, BookDetailsFragment.bookDetailInterface{
 
     public static final String DEFAULT_URL = "https://kamorris.com/lab/audlib/booksearch.php";
     String errorMsg;
@@ -47,11 +51,13 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     URL url;
 
     final Object object = new Object();
+    final Object object2 = new Object();
 
     Book currentBook;
     ArrayList<String> bookNameArray;
     ArrayList<Book> bookObjList;
     List<Fragment> bdfl = new ArrayList<>();
+    MyPageAdapter adapter;
 
     BookDetailsFragment bdf;
     PlayerFragment playerFragment;
@@ -74,30 +80,21 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     boolean connected;
     AudiobookService.MediaControlBinder binder;
 
+    int downloadBookId;
+    //data storage
+    SharedPreferences preferences;
 
-    Handler showContent = new Handler(new Handler.Callback() {
-
-        @Override
-        public boolean handleMessage(Message msg) {
-
-            JSONObject responseObject = (JSONObject) msg.obj;
-
-            try {
-                currentBook = getBook(responseObject);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            updateViews();
-
-            return false;
-        }
-    });
+    String internalFilename = "myfile";
+    File file;
+    boolean downloaded = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        file = new File(getFilesDir(), internalFilename);
+        preferences = getPreferences(MODE_PRIVATE);
 
 
         edit = findViewById(R.id.search);
@@ -168,6 +165,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
         searchURL = DEFAULT_URL;
         loadContent.start();
+        donwloadBook.start();
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -243,7 +241,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             if(singlePane) {
                 vp = findViewById(R.id.viewPager);
 
-                MyPageAdapter adapter = new MyPageAdapter(fm,bdfl);
+                adapter = new MyPageAdapter(fm,bdfl);
                 vp.setAdapter(adapter);
             } else {
 
@@ -322,8 +320,15 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
     @Override
     public void play(int id) {
-        if(connected) {
-            binder.play(id);
+        downloaded = preferences.getBoolean(String.valueOf(id),false);
+        if(downloaded) {
+            String fileName = String.valueOf(id) + ".mp3";
+            File audioFIle = new File(fileName);
+            binder.play(audioFIle);
+        } else {
+            if (connected) {
+                binder.play(id);
+            }
         }
     }
 
@@ -346,5 +351,45 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         if (connected) {
             binder.seekTo(time);
         }
+    }
+
+    Thread donwloadBook = new Thread() {
+        @Override
+        public void run() {
+
+            while(true) {
+
+                synchronized (object2) {
+                    try {
+                        object2.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (isNetworkActive()) {
+                    String urlStr = "https://kamorris.com/lab/audlib/download.php?id=" + String.valueOf(downloadBookId);
+                    String path = "file";
+                    String fileName = String.valueOf(downloadBookId) + ".mp3";
+                    HttpDownloader httpDownloader = new HttpDownloader();
+                    httpDownloader.downlaodFile(urlStr,path,fileName);
+                } else {
+                    Toast.makeText(MainActivity.this, "Please connect to a network", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+    };
+
+    @Override
+    public void downloadBook(int id) {
+        synchronized (object2) {
+            object2.notify();
+        }
+        downloaded = preferences.getBoolean(String.valueOf(id),false);
+        downloaded = true;
+    }
+
+    @Override
+    public void deleteBook() {
+
     }
 }
