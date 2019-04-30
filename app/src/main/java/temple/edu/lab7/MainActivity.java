@@ -31,6 +31,7 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -87,6 +88,11 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     String internalFilename = "myfile";
     File file;
     boolean downloaded = false;
+    String savedURL = "https://kamorris.com/lab/audlib/booksearch.php";
+    File savedURLFIle;
+
+
+    int playingBookId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -163,7 +169,29 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
             requestPermissions(new String[]{Manifest.permission.INTERNET, Manifest.permission.ACCESS_NETWORK_STATE}, 1234);
 
-        searchURL = DEFAULT_URL;
+        savedURLFIle = new File(getFilesDir(), "lastURL");
+        try {
+            savedURLFIle.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(savedURLFIle));
+            StringBuilder text = new StringBuilder();
+            String Line;
+
+            while ((Line = br.readLine()) != null) {
+                text.append(Line);
+                text.append("\n");
+            }
+            savedURL = text.toString();
+            br.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        searchURL = savedURL;
         loadContent.start();
         donwloadBook.start();
 
@@ -330,6 +358,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                 binder.play(id);
             }
         }
+        playingBookId = id;
     }
 
     @Override
@@ -337,6 +366,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         if (connected) {
             binder.pause();
         }
+
     }
 
     @Override
