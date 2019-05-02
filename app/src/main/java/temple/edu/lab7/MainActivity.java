@@ -63,6 +63,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     MyPageAdapter adapter;
 
     BookDetailsFragment bdf;
+    BookListFragment blf;
     PlayerFragment playerFragment;
     FragmentManager fm;
     ViewPager vp;
@@ -94,11 +95,15 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
     File savedURLFIle;
 
     int playingBookId;
+    int playingPosition;
+
+    Context main;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        main = getApplicationContext();
 
         file = new File(getFilesDir(), internalFilename);
         preferences = getPreferences(MODE_PRIVATE);
@@ -123,7 +128,33 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                 if(singlePane) {
                     currentBookId = (vp.getCurrentItem() + 1);
                 }
-                binder.play(currentBookId);
+
+                downloaded = false;
+                downloaded = preferences.getBoolean(String.valueOf(currentBookId),false);
+                Log.d("saved", "test");
+                if(downloaded) {
+                    String fileName = main.getFilesDir() + "/BookDownload/" + String.valueOf(currentBookId) + ".mp3";
+                    Log.d("saved", "test");
+                    File audioFIle = new File(fileName);
+                    binder.play(audioFIle);
+                } else {
+                    if (connected) {
+                        binder.play(currentBookId);
+                    }
+                }
+
+                if(singlePane) {
+                    playingBookId = vp.getCurrentItem();
+                } else
+                {
+                    playingBookId = blf.getBookSelected();
+                }
+                Log.d("playingBookId", String.valueOf(playingBookId));
+
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.putInt("playingBookId", playingBookId);
+                editor.apply();
+
             }
         };
 
@@ -162,6 +193,11 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                 seekBar.setProgress(seekBar.getProgress());
                 currentpos = seekBar.getProgress();
                 binder.seekTo(seekBar.getProgress());
+
+                playingPosition = seekBar.getProgress();
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.putInt("playingPosition", playingPosition);
+                editor.apply();
             }
         });
 
@@ -170,27 +206,24 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             requestPermissions(new String[]{Manifest.permission.INTERNET, Manifest.permission.ACCESS_NETWORK_STATE}, 1234);
 
         savedURLFIle = new File(getFilesDir(), "lastURL");
-        try {
-            savedURLFIle.createNewFile();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        try {
-            BufferedReader br = new BufferedReader(new FileReader(savedURLFIle));
-            StringBuilder text = new StringBuilder();
-            String Line;
-
-            while ((Line = br.readLine()) != null) {
-                text.append(Line);
+        if (savedURLFIle.exists()) {
+            try {
+                BufferedReader br = new BufferedReader(new FileReader(savedURLFIle));
+                StringBuilder text = new StringBuilder();
+                String line;
+                while ((line = br.readLine()) != null) {
+                    text.append(line);
+                }
+                br.close();
+                savedURL = text.toString();
+                Log.d("savedURL", savedURL);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            savedURL = text.toString();
-            br.close();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
-        searchURL = DEFAULT_URL;
+
+        searchURL = savedURL;
         loadContent.start();
         donwloadBook.start();
 
@@ -208,6 +241,10 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
                 adapter = new MyPageAdapter(fm, bdfl);
                 vp.setAdapter(adapter);
+
+                playingBookId = preferences.getInt("playingBookId",playingBookId);
+                vp.setCurrentItem(playingBookId);
+                Log.d("playingbookId", String.valueOf(playingBookId));
             }
         }
 
@@ -224,16 +261,41 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    saveFile();
-                    Log.d("search URL", searchURL);
+                    try {
+                        FileOutputStream outputStream = new FileOutputStream(savedURLFIle);
+                        outputStream.write(searchURL.getBytes());
+                        Log.d("search URL should be", searchURL);
+                        outputStream.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    if (savedURLFIle.exists()) {
+                        try {
+                            BufferedReader br = new BufferedReader(new FileReader(savedURLFIle));
+                            StringBuilder text = new StringBuilder();
+                            String line;
+                            while ((line = br.readLine()) != null) {
+                                text.append(line);
+                            }
+                            br.close();
+                            savedURL = text.toString();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    Log.d("search URL", savedURL);
                 } else {
                     searchURL = DEFAULT_URL;
                 }
+
                 synchronized (object) {
                     object.notify();
                 }
                 if(singlePane) {
                     adapter.notifyDataSetChanged();
+
                 }
             }
         });
@@ -301,7 +363,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
             } else {
 
-                BookListFragment blf = BookListFragment.newInstance(bookNameArray);
+                blf = BookListFragment.newInstance(bookNameArray);
                 fm.beginTransaction().replace(R.id.fbl, blf).commit();
                 BookDetailsFragment bdf = new BookDetailsFragment();
                 //fm.beginTransaction().replace(R.id.fbd, bdf).commit();
@@ -366,6 +428,9 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         if(connected) {
             unbindService(myConnection);
         }
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putInt("playingPosition", playingPosition);
+        editor.apply();
     }
 
     private void startMusicService(int id) {
@@ -376,9 +441,12 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
     @Override
     public void play(int id) {
+        Log.d("saved", "test");
         downloaded = preferences.getBoolean(String.valueOf(id),false);
-        if(downloaded) {
-            String fileName = Environment.getExternalStorageDirectory() + "/BookDownload/" + String.valueOf(id) + ".mp3";
+        Log.d("saved", "test");
+        if(true) {
+            String fileName = main.getFilesDir() + "/BookDownload/" + String.valueOf(id) + ".mp3";
+            Log.d("saved", "test");
             File audioFIle = new File(fileName);
             binder.play(audioFIle);
         } else {
@@ -402,7 +470,10 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         if(connected) {
             binder.stop();
         }
-        saveFile();
+        playingPosition = 0;
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putInt("playingPosition", playingPosition);
+        editor.apply();
     }
 
     @Override
@@ -427,10 +498,9 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                 }
                 if (isNetworkActive()) {
                     String urlStr = "https://kamorris.com/lab/audlib/download.php?id=" + String.valueOf(downloadBookId);
-                    String path = "file";
                     String fileName = String.valueOf(downloadBookId) + ".mp3";
                     HttpDownloader httpDownloader = new HttpDownloader();
-                    httpDownloader.downlaodFile(urlStr,path,fileName);
+                    httpDownloader.downlaodFile(main, urlStr,fileName);
                 } else {
                     Toast.makeText(MainActivity.this, "Please connect to a network", Toast.LENGTH_SHORT).show();
                 }
@@ -440,30 +510,30 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
     @Override
     public void downloadBook(int id) {
+        downloadBookId = id;
         synchronized (object2) {
             object2.notify();
         }
         downloaded = preferences.getBoolean(String.valueOf(id),false);
         downloaded = true;
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean(String.valueOf(id), downloaded);
+        editor.apply();
+        Log.d("check downloaded", String.valueOf(preferences.getBoolean(String.valueOf(id),false)));
+
     }
 
     @Override
     public void deleteBook(int id) {
-        String fileName = Environment.getExternalStorageDirectory() + "/BookDownload/" + String.valueOf(id) + ".mp3";
+        String fileName = main.getFilesDir() + "/BookDownload/" + String.valueOf(id) + ".mp3";
         File deletedFile = new File(fileName);
         deletedFile.delete();
+        Log.d("Still exists?", fileName + String.valueOf(deletedFile.exists()));
         downloaded = preferences.getBoolean(String.valueOf(id),false);
         downloaded = false;
-    }
-
-    private void saveFile() {
-        try {
-            FileOutputStream outputStream = new FileOutputStream(savedURLFIle);
-            outputStream.write(searchURL.getBytes());
-            outputStream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean(String.valueOf(id), downloaded);
+        editor.apply();
     }
 
 }

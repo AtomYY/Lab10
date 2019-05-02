@@ -22,6 +22,7 @@ public class BookListFragment extends Fragment {
     ArrayList<String> bookList;
     GetBookInterface gbi;
     Context parent;
+    int bookSelected;
 
     public static final String BOOK_KEY = "book_list";
 
@@ -59,10 +60,15 @@ public class BookListFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parentView, View view, int position, long id) {
                 ((GetBookInterface) parent).bookSelected(position);
+                bookSelected = position;
             }
         });
 
         return v;
+    }
+
+    public int getBookSelected() {
+        return bookSelected;
     }
 
 

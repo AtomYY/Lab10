@@ -9,8 +9,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+
 public class FileUtil {
-    private String SDPATH = Environment.getExternalStorageDirectory() + "/BookDownload/";
+    private final String SDPATH = Environment.getExternalStorageDirectory() + "/BookDownload/";
 
     public FileUtil() {
 
@@ -25,6 +26,12 @@ public class FileUtil {
     }
 
     public File createSDFile(String fileName) throws IOException {
+        String folder_main = "/BookDownload";
+        File f = new File(Environment.getExternalStorageDirectory(), folder_main);
+        if (!f.exists()) {
+            f.mkdirs();
+        }
+
         File file = new File(SDPATH + fileName);
         file.createNewFile();
         return file;
@@ -41,13 +48,13 @@ public class FileUtil {
         return file.exists();
     }
 
-    public File write2SDFromInput(String path, String fileName, InputStream input){
+    public File write2SDFromInput(String fileName, InputStream input){
         File file = null;
         OutputStream output = null;
 
         try {
-            createDir(path);
-            file =createSDFile(path + fileName);
+
+            file =createSDFile(fileName);
             output = new FileOutputStream(file);
             byte [] buffer = new byte[4 * 1024];
             while(input.read(buffer) != -1){
@@ -57,13 +64,13 @@ public class FileUtil {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        /*finally {
+        finally {
             try {
                 output.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }*/
+        }
         return file;
     }
 
