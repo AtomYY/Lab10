@@ -96,6 +96,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
     int playingBookId;
     int playingPosition;
+    int currentPlayingBook;
 
     Context main;
 
@@ -125,21 +126,29 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         View.OnClickListener onClickPlay = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                binder.pause();
                 if(singlePane) {
-                    currentBookId = (vp.getCurrentItem() + 1);
+                    currentBookId = bookObjList.get(vp.getCurrentItem()).getId();
+                    Log.d("current item position", String.valueOf(currentBookId));
                 }
+                currentPlayingBook = currentBookId;
 
                 downloaded = false;
                 downloaded = preferences.getBoolean(String.valueOf(currentBookId),false);
-                Log.d("saved", "test");
+                Log.d("downloaded?", String.valueOf(currentBookId) + String.valueOf(downloaded));
+
+
+                playingPosition = 0;
+                playingPosition = preferences.getInt(getRecordBookId(currentBookId), 0);
+                seekBar.setProgress(playingPosition);
                 if(downloaded) {
                     String fileName = main.getFilesDir() + "/BookDownload/" + String.valueOf(currentBookId) + ".mp3";
-                    Log.d("saved", "test");
+                    Log.d("Ready to play",fileName);
                     File audioFIle = new File(fileName);
-                    binder.play(audioFIle);
+                    binder.play(audioFIle, playingPosition);
                 } else {
                     if (connected) {
-                        binder.play(currentBookId);
+                        binder.play(currentBookId, playingPosition);
                     }
                 }
 
@@ -162,6 +171,14 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
             @Override
             public void onClick(View v) {
                 binder.pause();
+
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.putInt("playingPosition", playingPosition);
+                editor.apply();
+
+                editor.putInt(getRecordBookId(currentBookId), playingPosition);
+                editor.apply();
+                Log.d("playingposition", String.valueOf(currentBookId) + String.valueOf(playingPosition));
             }
         };
 
@@ -197,7 +214,11 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
                 playingPosition = seekBar.getProgress();
                 SharedPreferences.Editor editor = preferences.edit();
                 editor.putInt("playingPosition", playingPosition);
+
+                editor.putInt(getRecordBookId(playingBookId), playingPosition);
                 editor.apply();
+
+
             }
         });
 
@@ -391,7 +412,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
         } else{
             BookDetailsFragment newFragment = BookDetailsFragment.newInstance(bookObjList.get(id));
-            currentBookId = id;
+            currentBookId = newFragment.getId();
             fm.beginTransaction()
                     .replace(R.id.fbd, newFragment)
                     .commit();
@@ -441,9 +462,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
 
     @Override
     public void play(int id) {
-        Log.d("saved", "test");
         downloaded = preferences.getBoolean(String.valueOf(id),false);
-        Log.d("saved", "test");
         if(true) {
             String fileName = main.getFilesDir() + "/BookDownload/" + String.valueOf(id) + ".mp3";
             Log.d("saved", "test");
@@ -462,7 +481,6 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         if (connected) {
             binder.pause();
         }
-
     }
 
     @Override
@@ -473,6 +491,9 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         playingPosition = 0;
         SharedPreferences.Editor editor = preferences.edit();
         editor.putInt("playingPosition", playingPosition);
+        editor.apply();
+
+        editor.putInt(getRecordBookId(playingBookId), playingPosition);
         editor.apply();
     }
 
@@ -519,7 +540,7 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean(String.valueOf(id), downloaded);
         editor.apply();
-        Log.d("check downloaded", String.valueOf(preferences.getBoolean(String.valueOf(id),false)));
+        Log.d("check downloaded", String.valueOf(String.valueOf(id) + preferences.getBoolean(String.valueOf(id),false)));
 
     }
 
@@ -534,6 +555,10 @@ public class MainActivity extends AppCompatActivity implements BookListFragment.
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean(String.valueOf(id), downloaded);
         editor.apply();
+    }
+
+    private String getRecordBookId(int id) {
+        return "BookId" + String.valueOf(id);
     }
 
 }

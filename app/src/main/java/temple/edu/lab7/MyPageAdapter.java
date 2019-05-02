@@ -28,4 +28,5 @@ public class MyPageAdapter extends FragmentPagerAdapter {
         return this.fragments.size();
     }
 
+
 }
